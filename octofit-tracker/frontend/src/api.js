@@ -1,6 +1,25 @@
+function normalizeCollectionPayload(payload) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  if (payload && Array.isArray(payload.results)) {
+    return payload.results;
+  }
+
+  if (payload && Array.isArray(payload.items)) {
+    return payload.items;
+  }
+
+  if (payload && Array.isArray(payload.data)) {
+    return payload.data;
+  }
+
+  return [];
+}
+
 export function getApiBaseUrl() {
-  const codespaceName =
-    import.meta.env.VITE_CODESPACE_NAME || import.meta.env.CODESPACE_NAME;
+  const codespaceName = import.meta.env.VITE_CODESPACE_NAME || import.meta.env.CODESPACE_NAME;
 
   if (codespaceName) {
     return `https://${codespaceName}-8000.app.github.dev`;
@@ -18,14 +37,13 @@ export function getApiBaseUrl() {
   return 'http://localhost:8000';
 }
 
-export async function fetchUsers() {
-  const baseUrl = getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/users`);
-  return response.json();
-}
+export async function fetchCollection(resource) {
+  const response = await fetch(`${getApiBaseUrl()}/api/${resource}`);
 
-export async function fetchActivities() {
-  const baseUrl = getApiBaseUrl();
-  const response = await fetch(`${baseUrl}/api/activities`);
-  return response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to load ${resource}`);
+  }
+
+  const payload = await response.json();
+  return normalizeCollectionPayload(payload);
 }
